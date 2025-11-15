@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .bg { fill: #ffffff; }
+      .stroke { stroke: #2563eb; stroke-width: 36; stroke-linecap: round; stroke-linejoin: round; }
+      .header { fill: #2563eb; }
+      .glyph { fill: #2563eb; }
+    </style>
+  </defs>
+  <rect x="36" y="60" width="440" height="416" rx="64" class="bg" />
+  <rect x="36" y="60" width="440" height="416" rx="64" fill="none" class="stroke" />
+  <rect x="36" y="60" width="440" height="120" rx="64" class="header" />
+  <circle cx="140" cy="90" r="22" fill="#ffffff" />
+  <circle cx="372" cy="90" r="22" fill="#ffffff" />
+  <g>
+    <rect x="120" y="220" width="72" height="72" rx="12" class="glyph" />
+    <rect x="220" y="220" width="72" height="72" rx="12" class="glyph" />
+    <rect x="320" y="220" width="72" height="72" rx="12" class="glyph" />
+    <rect x="120" y="320" width="72" height="72" rx="12" class="glyph" />
+    <rect x="220" y="320" width="72" height="72" rx="12" class="glyph" />
+    <rect x="320" y="320" width="72" height="72" rx="12" class="glyph" />
+  </g>
+</svg>
