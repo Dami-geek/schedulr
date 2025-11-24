@@ -12,6 +12,103 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Theme variables */
+:root {
+  --bg: #f9fafb;
+  --text: #111827;
+  --card-bg: #ffffff;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --text: #e5e7eb;
+  --card-bg: #111827;
+  --muted: #9ca3af;
+  --border: #1f2937;
+}
+
+html, body {
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color 300ms ease, color 300ms ease;
+}
+
+/* Override common utility backgrounds/borders in dark mode */
+[data-theme="dark"] .bg-white { background-color: var(--card-bg) !important; }
+[data-theme="dark"] .bg-gray-50 { background-color: #111827 !important; }
+[data-theme="dark"] .bg-gray-100 { background-color: #1f2937 !important; }
+[data-theme="dark"] .text-gray-900 { color: var(--text) !important; }
+[data-theme="dark"] .text-gray-700 { color: var(--muted) !important; }
+[data-theme="dark"] .text-gray-600 { color: var(--muted) !important; }
+[data-theme="dark"] .border-gray-200 { border-color: var(--border) !important; }
+[data-theme="dark"] .border-gray-300 { border-color: var(--border) !important; }
+
+/* Card containers */
+.card {
+  background-color: var(--card-bg);
+  color: var(--text);
+  border-color: var(--border);
+  transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
+}
+
+/* Accessibility-focused card and text helpers */
+.a11y-card {
+  background-color: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+}
+
+.a11y-muted {
+  color: var(--muted);
+}
+
+.a11y-button {
+  transition: background-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
+}
+
+.a11y-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+/* Typography: h2 enhancements */
+@layer base {
+  h2 {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    color: #111827;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+.heading-2 {
+  font-family: 'Playfair Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-size: clamp(1.125rem, 1.2vw + 1rem, 1.5rem);
+}
+
+.heading-art {
+  font-family: 'Playfair Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background: linear-gradient(90deg, #1e3a8a 0%, #4f46e5 50%, #9333ea 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;

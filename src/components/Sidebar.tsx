@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCanvas } from '../contexts/CanvasContext';
 import { useCalendar } from '../contexts/CalendarContext';
 import { format } from 'date-fns';
@@ -11,8 +11,12 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Sidebar: React.FC = () => {
-  const { events, courses } = useCanvas();
+  const { events, courses, courseColors, setCourseColor } = useCanvas();
   const { filter, setFilter } = useCalendar();
+  const [editingCourse, setEditingCourse] = useState<string | null>(null);
+  const [now, setNow] = useState<Date>(new Date());
+  const [showUpcomingOnly, setShowUpcomingOnly] = useState<boolean>(false);
+  const palette = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#22c55e','#111827','#6b7280'];
 
   const getEventTypeIcon = (type: string) => {
     switch (type) {
@@ -44,8 +48,13 @@ const Sidebar: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
+  }, []);
+
   const upcomingEvents = events
-    .filter(event => new Date(event.dueDate) >= new Date())
+    .filter(event => new Date(event.dueDate).getTime() > now.getTime())
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 5);
 
@@ -66,11 +75,16 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+    <div className="bg-white flex flex-col h-full">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Schedulr</h2>
-        <p className="text-sm text-gray-600 mt-1">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="heading-2 heading-art font-bold">Schedulr</h2>
+            <p className="text-sm text-gray-700 mt-1 italic">Your school life, all in one place.</p>
+          </div>
+        </div>
+        <p className="text-sm text-gray-600 mt-2">
           {events.length} events across {courses.length} courses
         </p>
       </div>
@@ -80,18 +94,66 @@ const Sidebar: React.FC = () => {
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-sm font-medium text-gray-900 mb-3">Courses</h3>
           <div className="space-y-2">
-            {courses.map(course => (
-              <label key={course.id} className="flex items-center space-x-3 cursor-pointer">
+            {[...courses].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))).map(course => (
+              <label key={course.id} className="flex items-center space-x-3 cursor-pointer relative">
                 <input
                   type="checkbox"
                   checked={filter.courses.includes(course.id)}
                   onChange={() => handleCourseFilter(course.id)}
                   className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                 />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900 truncate">{course.name}</p>
-                  <p className="text-xs text-gray-500">{course.code}</p>
+                <div className="flex-1 min-w-0 flex items-center justify-between">
+                  <div className="flex items-center space-x-2 min-w-0">
+                    <button
+                      type="button"
+                      className="inline-block h-3 w-3 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ backgroundColor: courseColors[course.id] || '#6b7280' }}
+                      aria-label={`Change color for ${course.name}`}
+                      onClick={(e) => { e.preventDefault(); setEditingCourse(course.id); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditingCourse(course.id); } }}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm text-gray-900 truncate">{course.name}</p>
+                      <p className="text-xs text-gray-500">{course.code}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2"></div>
                 </div>
+                {editingCourse === course.id && (
+                  <div
+                    className="absolute left-10 mt-6 p-2 bg-white border border-gray-200 rounded shadow z-10"
+                    role="dialog"
+                    aria-label={`Select color for ${course.name}`}
+                  >
+                    <div className="grid grid-cols-9 gap-1">
+                      {palette.map(c => (
+                        <button
+                          key={c}
+                          onMouseEnter={(e) => { e.preventDefault(); try { setCourseColor(course.id, c); } catch {} }}
+                          onClick={(e) => { e.preventDefault(); try { setCourseColor(course.id, c); } catch {} }}
+                          className="h-5 w-5 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                          style={{ backgroundColor: c }}
+                          aria-label={c}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-2 flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={courseColors[course.id] || '#6b7280'}
+                        onInput={(e) => { try { setCourseColor(course.id, (e.target as HTMLInputElement).value); } catch {} }}
+                        aria-label="Custom color picker"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setEditingCourse(null); }}
+                        className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                )}
               </label>
             ))}
           </div>
@@ -142,7 +204,7 @@ const Sidebar: React.FC = () => {
                 onChange={() => setFilter({ ...filter, completed: false })}
                 className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
               />
-              <span className="text-sm text-gray-900">Pending Only</span>
+              <span className="text-sm text-gray-900">Incompleted</span>
             </label>
             <label className="flex items-center space-x-3 cursor-pointer">
               <input
@@ -152,19 +214,31 @@ const Sidebar: React.FC = () => {
                 onChange={() => setFilter({ ...filter, completed: true })}
                 className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
               />
-              <span className="text-sm text-gray-900">Completed Only</span>
+              <span className="text-sm text-gray-900">Upcoming</span>
             </label>
           </div>
         </div>
 
         {/* Upcoming Events */}
         <div className="p-6">
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Upcoming Events</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-gray-900">Upcoming Events</h3>
+            <button
+              onClick={() => setShowUpcomingOnly(v => !v)}
+              className={`text-xs rounded px-2 py-1 transition-colors ${showUpcomingOnly ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Upcoming
+            </button>
+          </div>
           <div className="space-y-3">
-            {upcomingEvents.length === 0 ? (
+            {(showUpcomingOnly ? upcomingEvents : events
+              .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+              .slice(0, 5)).length === 0 ? (
               <p className="text-sm text-gray-500">No upcoming events</p>
             ) : (
-              upcomingEvents.map(event => (
+              (showUpcomingOnly ? upcomingEvents : events
+                .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                .slice(0, 5)).map(event => (
                 <div key={event.id} className="bg-gray-50 rounded-lg p-3">
                   <div className="flex items-start space-x-3">
                     <div className={`p-1 rounded ${getEventTypeColor(event.type)} mt-0.5`}>
@@ -172,7 +246,9 @@ const Sidebar: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900">{event.title}</p>
-                      <p className="text-xs text-gray-500 mt-1">{event.course}</p>
+                      {String(event.course || '').trim().toLowerCase() !== String(event.title || '').trim().toLowerCase() && (
+                        <p className="text-xs text-gray-500 mt-1">{event.course}</p>
+                      )}
                       <div className="flex items-center space-x-2 mt-2">
                         <ClockIcon className="h-3 w-3 text-gray-400" />
                         <span className="text-xs text-gray-600">
