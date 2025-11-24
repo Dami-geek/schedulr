@@ -10,7 +10,7 @@ interface CalendarViewProps {
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({ onEventClick }) => {
-  const { events: canvasEvents } = useCanvas();
+  const { events: canvasEvents, courseColors } = useCanvas();
   const { events: googleEvents } = useGoogleCalendar();
   const { view, selectedDate, setSelectedDate, filter, manualEvents } = useCalendar();
 
@@ -57,14 +57,21 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onEventClick }) => {
     );
   };
 
-  const getEventColor = (type: string) => {
-    switch (type) {
+  const getEventColorClass = (event: any) => {
+    if (event.color) return '';
+    switch (event.type) {
       case 'assignment': return 'bg-blue-500';
       case 'exam': return 'bg-red-500';
       case 'project': return 'bg-purple-500';
       case 'announcement': return 'bg-green-500';
       default: return 'bg-gray-500';
     }
+  };
+
+  const getEventStyle = (event: any) => {
+    const courseKey = event.courseCode || event.course || '';
+    const color = courseColors[courseKey] || event.color;
+    return color ? { backgroundColor: color } : undefined;
   };
 
   const renderMonthView = () => {
@@ -101,7 +108,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onEventClick }) => {
               {dayEvents.slice(0, 2).map((event: any) => (
                 <div
                   key={event.id}
-                  className={`text-xs p-1 rounded text-white truncate cursor-pointer ${getEventColor(event.type)}`}
+                  style={getEventStyle(event)}
+                  className={`text-xs p-1 rounded text-white truncate cursor-pointer ${getEventColorClass(event)}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onEventClick(event);
@@ -109,6 +117,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onEventClick }) => {
                 >
                   <span className="font-medium">{event.title}</span>
                   <span className="ml-1 opacity-90">{format(new Date(event.dueDate), 'HH:mm')}</span>
+                  {event.priority && (
+                    <span className={`ml-1 inline-block px-1 rounded text-[10px] ${event.priority === 'high' ? 'bg-red-700' : event.priority === 'medium' ? 'bg-yellow-700' : 'bg-gray-700'}`}>{event.priority}</span>
+                  )}
                 </div>
               ))}
               {dayEvents.length > 2 && (
@@ -167,12 +178,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onEventClick }) => {
             {dayEvents.map((event: any) => (
               <div
                 key={event.id}
-                className={`p-2 rounded text-white text-sm cursor-pointer ${getEventColor(event.type)}`}
+                style={getEventStyle(event)}
+                className={`p-2 rounded text-white text-sm cursor-pointer ${getEventColorClass(event)}`}
                 onClick={() => onEventClick(event)}
               >
                 <div className="font-medium">{event.title}</div>
                 <div className="text-xs opacity-90">{format(new Date(event.dueDate), 'HH:mm')}</div>
                 <div className="text-xs opacity-75">{event.course}</div>
+                {event.priority && (
+                  <div className="mt-1 text-[10px] opacity-90">Priority: {event.priority}</div>
+                )}
               </div>
             ))}
           </div>
@@ -221,11 +236,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onEventClick }) => {
                   {hourEvents.map((event: any) => (
                     <div
                       key={event.id}
-                      className={`p-2 rounded text-white text-sm mb-2 cursor-pointer ${getEventColor(event.type)}`}
+                      style={getEventStyle(event)}
+                      className={`p-2 rounded text-white text-sm mb-2 cursor-pointer ${getEventColorClass(event)}`}
                       onClick={() => onEventClick(event)}
                     >
                       <div className="font-medium">{event.title}</div>
                       <div className="text-xs opacity-75">{event.course}</div>
+                      {event.priority && (
+                        <div className="mt-1 text-[10px] opacity-90">Priority: {event.priority}</div>
+                      )}
                     </div>
                   ))}
                 </div>

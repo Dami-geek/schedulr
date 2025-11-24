@@ -7,6 +7,15 @@ import reportWebVitals from './reportWebVitals';
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
+// Initialize theme from storage or default
+try {
+  const v = localStorage.getItem('schedulr_theme');
+  const theme = v === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+} catch {
+  document.documentElement.setAttribute('data-theme', 'light');
+}
 root.render(
   <React.StrictMode>
     <App />

@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useCalendar } from '../contexts/CalendarContext';
+import Input from './ui/Input';
+import Textarea from './ui/Textarea';
+import Select from './ui/Select';
+import TimeInput from './ui/TimeInput';
 import { CalendarEvent } from '../contexts/CalendarContext';
 
 interface EventModalProps {
@@ -21,8 +25,14 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, editEvent }) =
     if (editEvent) {
       setTitle(editEvent.title || '');
       setDescription(editEvent.description || '');
-      setDate(editEvent.dueDate ? editEvent.dueDate.split('T')[0] : '');
-      setTime(editEvent.dueDate ? editEvent.dueDate.split('T')[1]?.slice(0,5) || '' : '');
+      try {
+        const { toLocalDate, toLocalTime } = require('../utils/time');
+        setDate(editEvent.dueDate ? toLocalDate(editEvent.dueDate) : '');
+        setTime(editEvent.dueDate ? toLocalTime(editEvent.dueDate) : '');
+      } catch {
+        setDate(editEvent.dueDate ? editEvent.dueDate.split('T')[0] : '');
+        setTime(editEvent.dueDate ? editEvent.dueDate.split('T')[1]?.slice(0,5) || '' : '');
+      }
       setType((editEvent.type || 'personal') as CalendarEvent['type']);
       setCourse(editEvent.course || '');
     } else {
@@ -37,7 +47,11 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, editEvent }) =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const dueDate = time ? `${date}T${time}` : `${date}T00:00`;
+    let dueDate = `${date}T${time || '00:00'}`;
+    try {
+      const { toIsoFromLocal } = require('../utils/time');
+      dueDate = toIsoFromLocal(date, time || '00:00');
+    } catch {}
   
     const payload: Omit<CalendarEvent, 'id'> = {
       title,
@@ -69,73 +83,25 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, editEvent }) =
           <p className="text-sm text-gray-500">支持个人日程，含日期与时间</p>
         </div>
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">标题</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
-          </div>
+          <Input label="标题" value={title} onChange={(e) => setTitle(e.target.value)} required />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">描述</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+          <Textarea label="描述" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="日期" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+            <TimeInput label="时间" value={time} onChange={setTime} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
+            <Select label="类型" value={type} onChange={(e) => setType(e.target.value as CalendarEvent['type'])}>
+              <option value="personal">个人</option>
+              <option value="assignment">作业</option>
+              <option value="exam">考试</option>
+              <option value="project">项目</option>
+              <option value="announcement">公告</option>
+            </Select>
             <div>
-              <label className="block text-sm font-medium text-gray-700">日期</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">时间</label>
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">类型</label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value as CalendarEvent['type'])}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="personal">个人</option>
-                <option value="assignment">作业</option>
-                <option value="exam">考试</option>
-                <option value="project">项目</option>
-                <option value="announcement">公告</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">课程/来源</label>
-              <input
-                type="text"
-                value={course}
-                onChange={(e) => setCourse(e.target.value)}
-                placeholder="如：个人 / CS101"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
+              <Input label="课程/来源" value={course} onChange={(e) => setCourse(e.target.value)} placeholder="如：个人 / CS101" />
             </div>
           </div>
 

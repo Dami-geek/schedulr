@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon, BellIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import TimeInput from './ui/TimeInput';
 
 interface NotificationSettingsProps {
   onClose: () => void;
@@ -169,12 +170,13 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({ onClose }) 
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       Digest Time
                     </label>
-                    <input
-                      type="time"
+                    <TimeInput
+                      label=""
                       value={settings.digestTime}
-                      onChange={(e) => setSettings({ ...settings, digestTime: e.target.value })}
-                      className="w-32 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(v) => setSettings({ ...settings, digestTime: v })}
+                      containerClassName="w-full"
                     />
+                    
                   </div>
                 )}
               </div>
