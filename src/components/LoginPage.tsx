@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
+import Input from './ui/Input';
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -10,11 +11,31 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const [passwordError, setPasswordError] = useState<string | undefined>();
+
+  const validateEmail = (val: string) => {
+    const ok = /.+@.+\..+/.test(val);
+    setEmailError(ok ? undefined : '请输入有效邮箱地址');
+    return ok;
+  };
+
+  const validatePassword = (val: string) => {
+    const ok = val.length >= 6;
+    setPasswordError(ok ? undefined : '密码至少 6 位');
+    return ok;
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    const okEmail = validateEmail(email);
+    const okPassword = validatePassword(password);
+    if (!okEmail || !okPassword) {
+      setLoading(false);
+      return;
+    }
     try {
       await login(email, password);
       navigate('/dashboard');
@@ -41,31 +62,33 @@ const LoginPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
+        <div className="a11y-card rounded-lg shadow p-8 space-y-6">
           <h2 className="text-xl font-semibold text-gray-900 text-center">登录</h2>
           <form className="space-y-4" onSubmit={handleLogin}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">邮箱</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">密码</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="至少 6 位"
-                required
-              />
-            </div>
+            <Input
+              label="邮箱"
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) validateEmail(e.target.value);
+              }}
+              onBlur={(e) => validateEmail(e.target.value)}
+              placeholder="you@example.com"
+              error={emailError}
+            />
+            <Input
+              label="密码"
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (passwordError) validatePassword(e.target.value);
+              }}
+              onBlur={(e) => validatePassword(e.target.value)}
+              placeholder="至少 6 位"
+              error={passwordError}
+            />
             {error && (<p className="text-sm text-red-600">{error}</p>)}
             <button
               type="submit"
