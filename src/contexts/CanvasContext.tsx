@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import axios from 'axios';
 import { useAuth } from './AuthContext';
 
 export interface CanvasEvent {
@@ -394,13 +395,13 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
   const importICSFromUrl = async (url: string) => {
     const u = url.trim();
     if (!/^https?:\/\//i.test(u)) throw new Error('URL无效');
+    if (!/https:\/\/[^\s]+\.instructure\.com\/feeds\/calendars\//i.test(u)) throw new Error('仅支持 Canvas ICS 链接');
     try {
-      const res = await fetch(u, { mode: 'cors' });
-      if (!res.ok) throw new Error(`无法访问：HTTP ${res.status}`);
-      const ct = res.headers.get('content-type') || '';
+      const resp = await axios.get('/api/ics', { params: { url: u }, responseType: 'text', timeout: 10000 });
+      const ct = String(resp.headers?.['content-type'] || '');
       const hinted = u.toLowerCase().endsWith('.ics') || ct.includes('text/calendar');
       if (!hinted) throw new Error('非ICS文件');
-      const text = await res.text();
+      const text = typeof resp.data === 'string' ? resp.data : String(resp.data || '');
       if (text.length > 2 * 1024 * 1024) throw new Error('内容过大');
       const eventsAcc = parseICS(text);
       eventsAcc.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
@@ -409,8 +410,8 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
       localStorage.setItem('canvas_events', JSON.stringify(eventsAcc));
       localStorage.setItem('canvas_last_sync', new Date().toISOString());
     } catch (e: any) {
-      if (e?.name === 'TypeError') {
-        throw new Error('无法通过浏览器获取该URL（可能被CORS阻止或需要登录）。请在新标签打开该链接并下载后使用文件上传，或粘贴ICS文本。');
+      if (e?.name === 'TypeError' || e?.isAxiosError) {
+        throw new Error('无法通过代理获取该URL（网络异常或被阻止）。请使用文件上传或文本粘贴，或检查代理服务。');
       }
       throw e;
     }
